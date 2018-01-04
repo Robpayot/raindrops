@@ -1,0 +1,28 @@
+{
+  "name": "shaking-drops",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack --config webpack.config.js",
+    "build": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Robpayot/shaking-drops.git"
+  },
+  "author": "Robin Payot",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Robpayot/shaking-drops/issues"
+  },
+  "homepage": "https://github.com/Robpayot/shaking-drops#readme",
+  "devDependencies": {
+    "css-loader": "^0.28.7",
+    "file-loader": "^1.1.6",
+    "html-webpack-plugin": "^2.30.1",
+    "style-loader": "^0.19.1",
+    "webpack": "^3.10.0"
+  }
+}
