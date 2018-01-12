@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "parallelshell  'webpack -d --watch' 'webpack-dev-server --hotOnly --open'",
-    "build": "webpack"
+    "start": "parallelshell 'webpack-dev-server --open --hotOnly --config webpack.dev.js' 'webpack --watch --config webpack.dev.js'",
+    "build": "webpack --config webpack.prod.js"
   },
   "repository": {
     "type": "git",
@@ -37,8 +37,10 @@
     "path": "^0.12.7",
     "sass-loader": "^6.0.6",
     "style-loader": "^0.19.1",
+    "uglifyjs-webpack-plugin": "^1.1.6",
     "webpack": "^3.10.0",
-    "webpack-dev-server": "^2.9.7"
+    "webpack-dev-server": "^2.9.7",
+    "webpack-merge": "^4.1.1"
   },
   "dependencies": {}
 }
