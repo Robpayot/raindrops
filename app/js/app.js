@@ -1,6 +1,6 @@
-import '../scss/style.scss';
-import './drops';
+import '../scss/style.scss'
+import './drops'
 
 if (module.hot) { // enable hot reload
-	module.hot.accept();
+	module.hot.accept()
 }

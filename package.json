@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "parallelshell  'webpack --watch' 'webpack-dev-server --hotOnly'",
+    "start": "parallelshell  'webpack -d --watch' 'webpack-dev-server --hotOnly --open'",
     "build": "webpack"
   },
   "repository": {
@@ -18,10 +18,15 @@
   },
   "homepage": "https://github.com/Robpayot/shaking-drops#readme",
   "devDependencies": {
-    "chokidar": "^2.0.0",
+    "@babel/core": "^7.0.0-beta.37",
+    "@babel/preset-env": "^7.0.0-beta.37",
+    "babel-eslint": "^8.2.1",
+    "babel-loader": "^8.0.0-beta.0",
     "clean-webpack-plugin": "^0.1.17",
     "copy-webpack-plugin": "^4.3.1",
     "css-loader": "^0.28.7",
+    "eslint": "^4.15.0",
+    "eslint-loader": "^1.9.0",
     "file-loader": "^1.1.6",
     "handlebars": "^4.0.11",
     "handlebars-loader": "^1.6.0",
