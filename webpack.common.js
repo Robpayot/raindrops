@@ -2,6 +2,7 @@ const path = require('path')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+// const ReloadPlugin = require('reload-html-webpack-plugin')
 const webpack = require('webpack')
 
 module.exports = {
@@ -17,6 +18,7 @@ module.exports = {
 			{ from: 'app/templates', to: 'templates' },
 			{ from: 'app/images', to: 'images' }
 		]),
+		// new ReloadPlugin(),
 		new webpack.NamedModulesPlugin(),
 		new webpack.HotModuleReplacementPlugin()
 	],
