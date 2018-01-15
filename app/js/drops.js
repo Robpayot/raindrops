@@ -1,5 +1,7 @@
-import { Application, Sprite } from 'pixi.js'
+import { Application, Sprite, RenderTexture, filters, Container, Graphics } from 'pixi.js'
 import background from '../images/water-in-the-desert.jpg'
+import drop1 from '../images/water-1.png'
+import dropNormal1 from '../images/water-normal-1.png'
 
 
 class Drops {
@@ -26,6 +28,8 @@ class Drops {
 			backgroundColor: 0xf4efe2
 		})
 
+		this.container = new Container()
+
 		this.mouse = {
 			x: this.screen.w / 2,
 			y: this.screen.h / 2
@@ -34,11 +38,16 @@ class Drops {
 		// bind
 		this.handleMouse = this.handleMouse.bind(this)
 
-		this.addBackground()
+		this.setBackground()
+		this.setDrops()
+		this.setDisplacement()
 
 		// loader ?
 
 		this.events()
+
+
+		this.app.stage.addChild(this.container)
 
 
 	}
@@ -51,13 +60,58 @@ class Drops {
 		this.app.ticker.add(this.handleRAF.bind(this))
 	}
 
-	addBackground() {
-		const bkg = Sprite.fromImage(background)
-		bkg.anchor.set(0.5,0.5)
-		bkg.x = this.app.screen.width / 2
-		bkg.y = this.app.screen.height / 2
+	setBackground() {
+		this.bkg = Sprite.fromImage(background)
+		this.bkg.anchor.set(0.5,0.5)
+		this.bkg.x = this.app.screen.width / 2
+		this.bkg.y = this.app.screen.height / 2
 
-		this.app.stage.addChild(bkg)
+		this.app.stage.addChild(this.bkg)
+
+	}
+
+	setDisplacement() {
+
+		// Create a render texture containing all normal drops
+		// This render Texture will be use as a filter on the background
+
+		this.renderTexture = RenderTexture.create(this.app.screen.width, this.app.screen.height)
+		this.renderTextureSprite = new Sprite(this.renderTexture)
+
+		// Object containing all normals
+		this.normals = new Container()
+
+		// Important, add a 50% background gray to avoid image distorsion due to the Displacement filter.
+		let grayBkg = new Graphics()
+		grayBkg.beginFill(0x808080)
+		grayBkg.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
+
+		this.normals.addChild(grayBkg)
+		this.normals.addChild(this.dropNormal)
+
+		// Create Filter
+		this.displacement = new filters.DisplacementFilter(this.renderTextureSprite)
+		this.displacement.scale.x = 1000
+		this.displacement.scale.y = 1000
+		this.bkg.filters = [this.displacement]
+
+	}
+
+	setDrops() {
+		// create a render texture containing all normal drops
+
+		let drop = Sprite.fromImage(drop1)
+		drop.alpha = 0.8
+
+		this.dropNormal = Sprite.fromImage(dropNormal1)
+
+		// drop.anchor.set(0.5,0.5)
+		// this.dropNormal.anchor.set(0.5,0.5)
+		this.dropNormal.x = drop.x = this.app.screen.width / 2
+		this.dropNormal.y = drop.y = this.app.screen.height / 2
+
+
+		this.app.stage.addChild(drop)
 	}
 
 	handleMouse(e) {
@@ -69,6 +123,7 @@ class Drops {
 	}
 
 	handleRAF() {
+		this.app.renderer.render(this.normals, this.renderTexture) // render the RenderTexture and use it as a displacement filter
 		// console.log('check raf')
 	}
 
