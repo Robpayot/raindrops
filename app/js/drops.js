@@ -1,4 +1,5 @@
 import { Application, Sprite, RenderTexture, filters, Container, Graphics } from 'pixi.js'
+import { getRandom } from './helpers'
 import background from '../images/water-in-the-desert.jpg'
 import drop1 from '../images/water-1.png'
 import dropNormal1 from '../images/water-normal-1.png'
@@ -13,6 +14,7 @@ class Drops {
 		const img = new Image()
 		img.src = background
 
+		this.nbDrops = 2
 
 		this.screen = {
 			w: window.innerWidth,
@@ -100,18 +102,28 @@ class Drops {
 	setDrops() {
 		// create a render texture containing all normal drops
 
-		let drop = Sprite.fromImage(drop1)
-		drop.alpha = 0.8
+		this.drops = []
 
-		this.dropNormal = Sprite.fromImage(dropNormal1)
+		for (let i = 0; i < this.nbDrops; i++) {
 
-		// drop.anchor.set(0.5,0.5)
-		// this.dropNormal.anchor.set(0.5,0.5)
-		this.dropNormal.x = drop.x = this.app.screen.width / 2
-		this.dropNormal.y = drop.y = this.app.screen.height / 2
+			let drop = Sprite.fromImage(drop1)
+			drop.alpha = 0.8
+
+			this.dropNormal = Sprite.fromImage(dropNormal1)
+
+			// drop.anchor.set(0.5,0.5)
+			// this.dropNormal.anchor.set(0.5,0.5)
+			let x = getRandom(this.app.screen.width / 2 - 100, this.app.screen.width / 2 + 100)
+			let y = getRandom(this.app.screen.height / 2 - 100, this.app.screen.height / 2 + 100)
+			this.dropNormal.x = drop.x = x
+			this.dropNormal.y = drop.y = y
 
 
-		this.app.stage.addChild(drop)
+			this.app.stage.addChild(drop)
+			this.drops.push(drop)
+		}
+
+
 	}
 
 	handleMouse(e) {

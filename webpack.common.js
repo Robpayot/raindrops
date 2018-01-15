@@ -41,7 +41,7 @@ module.exports = {
 		}, {
 			enforce: 'pre',
 			test: /\.js$/,
-			exclude: [/(node_modules|bower_components)/, path.resolve(__dirname, 'vendors')],
+			exclude: [/(node_modules|bower_components)/, path.resolve(__dirname, 'vendors'), /helpers\.js/],
 			loader: 'eslint-loader'
 		}, {
 			test: /\.js$/,
