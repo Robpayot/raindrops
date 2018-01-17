@@ -1,11 +1,19 @@
-import { Application, Sprite, RenderTexture, filters, Container, Graphics } from 'pixi.js'
+import { Application, loader, Sprite, RenderTexture, filters, Container, Graphics, WRAP_MODES } from 'pixi.js'
 import { getRandom } from './helpers'
-import background from '../images/water-in-the-desert.jpg'
 import dat from 'dat.gui'
 import { TweenMax } from 'gsap'
+
 // Images
+import background from '../images/window.jpg'
 import drop1 from '../images/water-1.png'
+import drop2 from '../images/water-2.png'
+import drop3 from '../images/water-3.png'
+import drop4 from '../images/water-4.png'
 import dropNormal1 from '../images/water-normal-1.png'
+import dropNormal2 from '../images/water-normal-2.png'
+import dropNormal3 from '../images/water-normal-3.png'
+import dropNormal4 from '../images/water-normal-4.png'
+import flicker from '../images/flicker.jpg'
 
 
 class Drops {
@@ -14,12 +22,14 @@ class Drops {
 
 		// bind
 		this.handleMouse = this.handleMouse.bind(this)
-		this.checkMouse = this.checkMouse.bind(this)
-		this.onChangeRefraction = this.onChangeRefraction.bind(this)
+		this.stopMouse = this.stopMouse.bind(this)
+		this.stretch = this.stretch.bind(this)
+		this.onChangeFilter = this.onChangeFilter.bind(this)
+
 
 		// set up
 
-		this.nbDrops = 2
+		this.nbDrops = 10
 
 		this.screen = {
 			w: window.innerWidth,
@@ -35,8 +45,6 @@ class Drops {
 			backgroundColor: 0xf4efe2
 		})
 
-		this.container = new Container()
-
 		this.mouse = {
 			x: this.screen.w / 2,
 			y: this.screen.h / 2
@@ -47,91 +55,67 @@ class Drops {
 
 		// GUI
 		this.controller = {
-			refraction: 1000
+			refraction: 120,
+			flicker_effect: 25,
+			wind: 0.1,
 		}
 
 		this.gui = new dat.GUI()
-		this.gui.add(this.controller, 'refraction', -2000, 1000).onChange(this.onChangeRefraction)
+		this.gui.add(this.controller, 'refraction', -2000, 1000).onChange(this.onChangeFilter)
+		this.gui.add(this.controller, 'flicker_effect', 0, 50).onChange(this.onChangeFilter)
+		this.gui.add(this.controller, 'wind', 0, 15).onChange(this.onChangeFilter)
 
-		this.setBackground()
-		this.setDrops()
-		this.setDisplacement()
 
-		// loader ?
+		// Load
+		this.loader = loader
+		this.loader.add('background', background)
+		this.loader.add('drop1', drop1)
+		this.loader.add('drop2', drop2)
+		this.loader.add('drop3', drop3)
+		this.loader.add('drop4', drop4)
+		this.loader.add('dropNormal1', dropNormal1)
+		this.loader.add('dropNormal2', dropNormal2)
+		this.loader.add('dropNormal3', dropNormal3)
+		this.loader.add('dropNormal4', dropNormal4)
+		this.loader.add('flicker', flicker)
 
-		this.events()
+		this.loader.load((loader, resources) => {
 
-		this.app.stage.addChild(this.container)
+			this.resources = resources
 
-		this.checkMouse()
+			this.setBackground()
+			this.setDrops()
+			this.setRefraction()
+			this.setFlicker()
+
+			this.events()
+
+			this.stretch()
+		})
 
 	}
 
 	events() {
-		window.addEventListener('mousemove', this.handleMouse)
-		window.addEventListener('touchmove', this.handleMouse)
+		this.app.view.addEventListener('mousemove', this.handleMouse)
+		this.app.view.addEventListener('mouseleave', this.stopMouse)
 
 		this.app.ticker.start()
 		this.app.ticker.add(this.handleRAF.bind(this))
 	}
 
-	checkMouse() {
-
-		let speedX = Math.abs(this.mouse.x - this.lastMouseX)
-		let speedY = Math.abs(this.mouse.y - this.lastMouseY)
-
-		if (speedX > 600 || speedY > 600) {
-
-			if (!this.isStretching) {
-				this.isStretching = true
-
-				for (let i = 0; i < this.drops.length; i++) {
-
-					let w, h
-					if (speedX > 600) {
-						w = this.drops[i].initW
-						h = this.drops[i].initH * 0.5
-					} else {
-						w = this.drops[i].initW * 0.5
-						h = this.drops[i].initH
-					}
-
-					TweenMax.to([this.drops[i], this.dropsNormal[i]], 0.3, {
-						width: w,
-						height: h,
-						ease: window.Linear.easeNone,
-						onComplete: () => {
-
-							this.lastMouseX = this.mouse.x
-							this.isStretching = false
-
-						}
-					})
-				}
-			}
-			console.log('vite !!!!')
-		} else {
-
-			for (let i = 0; i < this.drops.length; i++) {
-				TweenMax.to([this.drops[i], this.dropsNormal[i]], 0.5, { width: this.drops[i].initW, height: this.drops[i].initH, ease: window.Expo.easeOut })
-			}
-		}
-
-		this.lastMouseX = this.mouse.x
-		this.lastMouseY = this.mouse.y
-
-		TweenMax.delayedCall(0.5, this.checkMouse)
-
-
-
-	}
-
 	setBackground() {
 
-		this.bkg = Sprite.fromImage(background)
+		this.bkg = new Sprite(this.resources.background.texture)
 		this.bkg.anchor.set(0.5, 0.5)
 		this.bkg.x = this.app.screen.width / 2
 		this.bkg.y = this.app.screen.height / 2
+
+		let ratio = this.resources.background.texture.width / this.resources.background.texture.height
+
+		if (ratio > 1) {
+			this.bkg.width = this.app.screen.width
+			this.bkg.height = this.app.screen.width / ratio
+		}
 
 		this.app.stage.addChild(this.bkg)
 
@@ -149,28 +133,49 @@ class Drops {
 
 		this.normalsContainer.addChild(grayBkg)
 
-		// create a render texture containing all normal drops
+		// 4 differents type of drops
+		this.dropModels = [this.resources.drop1.texture, this.resources.drop2.texture, this.resources.drop3.texture, this.resources.drop4.texture]
+		this.dropNormalModels = [this.resources.dropNormal1.texture, this.resources.dropNormal2.texture, this.resources.dropNormal3.texture, this.resources.dropNormal4.texture]
 
 		this.drops = []
 		this.dropsNormal = []
 
 		for (let i = 0; i < this.nbDrops; i++) {
 
-			let drop = Sprite.fromImage(drop1)
+			let model = Math.round(getRandom(0,3))
+			console.log(model)
+
+			let drop = new Sprite(this.dropModels[model])
+			let dropNormal = new Sprite(this.dropNormalModels[model])
+
 			drop.alpha = 0.8
-
-			let dropNormal = Sprite.fromImage(dropNormal1)
-
 			drop.anchor.set(0.5, 0.5)
 			dropNormal.anchor.set(0.5, 0.5)
-			dropNormal.x = drop.x = drop.initX = getRandom(this.app.screen.width / 2 - 100, this.app.screen.width / 2 + 100)
-			dropNormal.y = drop.y = drop.initY = getRandom(this.app.screen.height / 2 - 100, this.app.screen.height / 2 + 100)
 
-			// drop.lens = getRandom(100, 200) / 100 // random lens
-			// drop.speed = getRandom(1, 1.3) // random lens
-			drop.initW = drop.texture.baseTexture.width - 20 /// ??????? why not 80
-			drop.initH = drop.texture.baseTexture.height - 20 /// ??????? why not 80
-			// console.log(drop.texture.baseTexture, drop.texture.baseTexture.width)
+			// Random positions
+			let marge = this.app.screen.width / 6
+			drop.initX = getRandom(this.app.screen.width / 2 - marge, this.app.screen.width / 2 + marge)
+			drop.initY = getRandom(this.app.screen.height / 2 - marge, this.app.screen.height / 2 + marge)
+
+			// Random size
+			dropNormal.scale.x = drop.scale.x = dropNormal.scale.y = drop.scale.y = drop.initScale = getRandom(0.8, 1.2)
+
+			let margeCollision = 100
+			// Avoid collisions
+			for (let i = 0; i < this.drops.length; i++) {
+				if (drop.initX < margeCollision + this.drops[i].initX && drop.initX > -margeCollision + this.drops[i].initX && drop.initY < margeCollision + this.drops[i].initY && drop.initY > -margeCollision + this.drops[i].initY) {
+					// if in the perimeter
+					drop.initX += margeCollision
+					drop.initY += margeCollision
+
+				}
+			}
+
+			dropNormal.x = drop.x = drop.initX
+			dropNormal.y = drop.y = drop.initY
+
+			drop.coefX = 0.04 * drop.initScale // random velocity
+			drop.coefY = 0.04 * drop.initScale
 
 			this.app.stage.addChild(drop)
 			this.normalsContainer.addChild(dropNormal)
@@ -186,7 +191,7 @@ class Drops {
 
 	}
 
-	setDisplacement() {
+	setRefraction() {
 
 		// Create a render texture containing all normal drops
 		// This render Texture will be use as a filter on the background
@@ -202,6 +207,74 @@ class Drops {
 
 	}
 
+	setFlicker() {
+
+		this.flickerSprite = new Sprite(this.resources.flicker.texture)
+
+		this.flickerSprite.texture.baseTexture.wrapMode = WRAP_MODES.REPEAT
+
+
+		this.flicker = new filters.DisplacementFilter(this.flickerSprite)
+		this.flicker.scale.x = this.controller.flicker_effect
+		this.flicker.scale.y = this.controller.flicker_effect
+
+		// Need to be added to stage
+		this.app.stage.addChild(this.flickerSprite)
+
+		// Add filter
+		for (let i = 0; i < this.drops.length; i++) {
+			this.drops[i].filters = [this.flicker]
+			this.dropsNormal[i].filters = [this.flicker]
+		}
+
+	}
+
+	stretch() {
+
+		// Calcule mouse speed
+		let distX = this.mouse.x - this.lastMouseX
+		let distY = this.mouse.y - this.lastMouseY
+
+		// Pythagore <3
+		let dist = Math.sqrt(distX * distX + distY * distY)
+		// With the delayed call we know the speed : let's say if dist > 200 after 0.1s, it's fast
+		// console.log(dist)
+		let maxDist = 50
+
+		if (dist > maxDist) {
+
+			for (let i = 0; i < this.drops.length; i++) {
+
+				let w, h
+				if (Math.abs(distX) > maxDist) {
+					w = this.drops[i].initScale * 1.4
+					h = this.drops[i].initScale * 0.5
+				} else {
+					w = this.drops[i].initScale * 0.5
+					h = this.drops[i].initScale * 1.4
+				}
+
+				TweenMax.to([this.drops[i].scale, this.dropsNormal[i].scale], 0.3, {
+					x: w,
+					y: h,
+					ease: window.Linear.easeNone
+				})
+			}
+
+		} else {
+
+			for (let i = 0; i < this.drops.length; i++) {
+				TweenMax.to([this.drops[i].scale, this.dropsNormal[i].scale], 0.5, { x: this.drops[i].initScale, y: this.drops[i].initScale, ease: window.Expo.easeOut })
+			}
+		}
+
+		this.lastMouseX = this.mouse.x
+		this.lastMouseY = this.mouse.y
+
+		TweenMax.delayedCall(0.1, this.stretch) // Check every 0.1s if we need to stretch drops
+
+	}
+
 	handleMouse(e) {
 
 		if (e) {
@@ -210,50 +283,47 @@ class Drops {
 			this.mouse.x = x - this.screen.w / 2
 			this.mouse.y = y - this.screen.h / 2
 
-			if (this.lastMouseX > -1) {
-				this.mousetravel += Math.max(Math.abs(x - this.lastMouseX), Math.abs(y - this.lastMouseY))
-			}
 		}
+	}
+
+	stopMouse() {
+		this.mouse.x = 0
+		this.mouse.y = 0
 	}
 
 	handleRAF() {
 
-		// const coefX = 0.015
-		// const coefY = 0.015
-
-		// const maxOffset = clamp(this.app.screen.width, 1000, 1524)
-		// let offset = maxOffset * 0.27 - 100
-
+		// Move drops
 		for (let i = 0; i < this.drops.length; i++) {
 
-			// console.log(this.mouse.x)
-
-			const currentPosX = this.drops[i].initX
-			const currentPosY = this.drops[i].initY
-
 			// Specify target we want
-			this.posTargets[i].x = currentPosX + this.mouse.x
-			this.posTargets[i].y = currentPosY + this.mouse.y
+			this.posTargets[i].x = this.drops[i].initX + this.mouse.x
+			this.posTargets[i].y = this.drops[i].initY + this.mouse.y
 
 			// Smooth it with deceleration
-			this.posSmooth[i].x += (this.posTargets[i].x - this.posSmooth[i].x) * 0.08
-			this.posSmooth[i].y += (this.posTargets[i].y - this.posSmooth[i].y) * 0.08
+			this.posSmooth[i].x += (this.posTargets[i].x - this.posSmooth[i].x) * this.drops[i].coefX
+			this.posSmooth[i].y += (this.posTargets[i].y - this.posSmooth[i].y) * this.drops[i].coefY
 
-			// Apply on sprites & hues pixi elements
+			// Apply on sprites & normals drops
 			this.drops[i].x = this.dropsNormal[i].x = this.posSmooth[i].x
 			this.drops[i].y = this.dropsNormal[i].y = this.posSmooth[i].y
 
 		}
 
-		// Render Texture
-		this.app.renderer.render(this.normalsContainer, this.renderTexture) // render the RenderTexture and use it as a displacement filter
+		// Render Texture of normalsContainer and use it as a displacement filter
+		this.app.renderer.render(this.normalsContainer, this.renderTexture)
 
+		// Wind effect
+		this.flickerSprite.x += this.controller.wind
 	}
 
-	onChangeRefraction() {
+	onChangeFilter() {
 
 		this.displacement.scale.x = this.controller.refraction
 		this.displacement.scale.y = this.controller.refraction
+
+		this.flicker.scale.x = this.controller.flicker_effect
+		this.flicker.scale.y = this.controller.flicker_effect
 	}
 
 }
