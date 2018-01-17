@@ -16,7 +16,7 @@ module.exports = {
 		new CopyWebpackPlugin([
 			// { from: 'app/index.hbs' },
 			{ from: 'app/templates', to: 'templates' },
-			{ from: 'app/images', to: 'images' }
+			// { from: 'app/images', to: 'images' }
 		]),
 		// new ReloadPlugin(),
 		new webpack.NamedModulesPlugin(),
