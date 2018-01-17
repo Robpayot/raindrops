@@ -26,10 +26,7 @@ class Drops {
 		this.stretch = this.stretch.bind(this)
 		this.onChangeFilter = this.onChangeFilter.bind(this)
 
-
 		// set up
-
-		this.nbDrops = 10
 
 		this.screen = {
 			w: window.innerWidth,
@@ -55,6 +52,7 @@ class Drops {
 
 		// GUI
 		this.controller = {
+			nb_drops: 10,
 			refraction: 120,
 			flicker_effect: 25,
 			wind: 0.1,
@@ -64,6 +62,7 @@ class Drops {
 		this.gui.add(this.controller, 'refraction', -2000, 1000).onChange(this.onChangeFilter)
 		this.gui.add(this.controller, 'flicker_effect', 0, 50).onChange(this.onChangeFilter)
 		this.gui.add(this.controller, 'wind', 0, 15).onChange(this.onChangeFilter)
+		// this.gui.add(this.controller, 'nb_drops', 1, 40)
 
 
 		// Load
@@ -113,8 +112,14 @@ class Drops {
 		let ratio = this.resources.background.texture.width / this.resources.background.texture.height
 
 		if (ratio > 1) {
-			this.bkg.width = this.app.screen.width
-			this.bkg.height = this.app.screen.width / ratio
+
+			if (this.app.screen.height > this.app.screen.width) {
+				this.bkg.height = this.app.screen.height
+				this.bkg.width = this.app.screen.height * ratio
+			} else {
+				this.bkg.width = this.app.screen.width
+				this.bkg.height = this.app.screen.width / ratio
+			}
 		}
 
 		this.app.stage.addChild(this.bkg)
@@ -140,7 +145,7 @@ class Drops {
 		this.drops = []
 		this.dropsNormal = []
 
-		for (let i = 0; i < this.nbDrops; i++) {
+		for (let i = 0; i < this.controller.nb_drops; i++) {
 
 			let model = Math.round(getRandom(0,3))
 			console.log(model)
