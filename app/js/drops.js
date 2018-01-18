@@ -4,7 +4,10 @@ import dat from 'dat.gui'
 import { TweenMax } from 'gsap'
 
 // Images
-import background from '../images/window.jpg'
+import windowBkg from '../images/window.jpg'
+import surfboardBkg from '../images/surfboard.jpg'
+import abstraitBkg from '../images/abstrait.jpg'
+import landscapeBkg from '../images/landscape.jpg'
 import drop1 from '../images/water-1.png'
 import drop2 from '../images/water-2.png'
 import drop3 from '../images/water-3.png'
@@ -14,6 +17,7 @@ import dropNormal2 from '../images/water-normal-2.png'
 import dropNormal3 from '../images/water-normal-3.png'
 import dropNormal4 from '../images/water-normal-4.png'
 import flicker from '../images/flicker.jpg'
+import github from '../images/github.png'
 
 
 class Drops {
@@ -25,26 +29,13 @@ class Drops {
 		this.stopMouse = this.stopMouse.bind(this)
 		this.stretch = this.stretch.bind(this)
 		this.onChangeFilter = this.onChangeFilter.bind(this)
+		this.reset = this.reset.bind(this)
 
 		// set up
 
-		this.screen = {
-			w: window.innerWidth,
-			h: window.innerHeight
-		}
-
-		this.app = new Application({
-			width: this.screen.w,
-			height: this.screen.h,
-			view: document.querySelector('canvas'),
-			resolution: window.devicePixelRatio,
-			sharedTicker: true,
-			backgroundColor: 0xf4efe2
-		})
-
 		this.mouse = {
-			x: this.screen.w / 2,
-			y: this.screen.h / 2
+			x: window.innerWidth / 2,
+			y: window.innerHeight / 2
 		}
 
 		this.posTargets = []
@@ -52,22 +43,28 @@ class Drops {
 
 		// GUI
 		this.controller = {
-			nb_drops: 10,
+			nb_drops: 20,
 			refraction: 120,
-			flicker_effect: 25,
+			flicker_effect: 30,
 			wind: 0.1,
+			background: 'window',
 		}
 
 		this.gui = new dat.GUI()
 		this.gui.add(this.controller, 'refraction', -2000, 1000).onChange(this.onChangeFilter)
 		this.gui.add(this.controller, 'flicker_effect', 0, 50).onChange(this.onChangeFilter)
 		this.gui.add(this.controller, 'wind', 0, 15).onChange(this.onChangeFilter)
+		this.gui.add(this.controller, 'nb_drops', 1, 100).onChange(this.reset)
+		this.gui.add(this.controller, 'background', ['window', 'abstrait', 'surfboard']).onChange(this.reset)
 		// this.gui.add(this.controller, 'nb_drops', 1, 40)
 
 
 		// Load
 		this.loader = loader
-		this.loader.add('background', background)
+		this.loader.add('window', windowBkg)
+		this.loader.add('surfboard', surfboardBkg)
+		this.loader.add('abstrait', abstraitBkg)
+		this.loader.add('landscape', landscapeBkg)
 		this.loader.add('drop1', drop1)
 		this.loader.add('drop2', drop2)
 		this.loader.add('drop3', drop3)
@@ -77,24 +74,49 @@ class Drops {
 		this.loader.add('dropNormal3', dropNormal3)
 		this.loader.add('dropNormal4', dropNormal4)
 		this.loader.add('flicker', flicker)
+		this.loader.add('github', github)
 
 		this.loader.load((loader, resources) => {
 
 			this.resources = resources
 
-			this.setBackground()
-			this.setDrops()
-			this.setRefraction()
-			this.setFlicker()
+			this.bkgModels = {
+				'window': this.resources.window.texture,
+				'surfboard': this.resources.surfboard.texture,
+				'abstrait': this.resources.abstrait.texture,
+				'landscape': this.resources.landscape.texture
+			}
 
+			this.init()
+			this.stretch()
+
+			window.addEventListener('resize', this.reset)
 			this.events()
 
-			this.stretch()
 		})
 
 	}
 
+	init() {
+
+		this.app = new Application({
+			width: window.innerWidth,
+			height: window.innerHeight,
+			view: document.querySelector('canvas'),
+			resolution: window.devicePixelRatio,
+			sharedTicker: true,
+			backgroundColor: 0xf4efe2
+		})
+
+		this.setBackground()
+		this.setDrops()
+		this.setRefraction()
+		this.setFlicker()
+
+	}
+
 	events() {
+
 		this.app.view.addEventListener('mousemove', this.handleMouse)
 		this.app.view.addEventListener('mouseleave', this.stopMouse)
 
@@ -104,23 +126,50 @@ class Drops {
 
 	setBackground() {
 
-		this.bkg = new Sprite(this.resources.background.texture)
-		this.bkg.anchor.set(0.5, 0.5)
-		this.bkg.x = this.app.screen.width / 2
-		this.bkg.y = this.app.screen.height / 2
+		let bkg = new Sprite(this.bkgModels[this.controller.background])
+		bkg.anchor.set(0.5, 0.5)
+		bkg.x = this.app.screen.width / 2
+		bkg.y = this.app.screen.height / 2
 
-		let ratio = this.resources.background.texture.width / this.resources.background.texture.height
+		let ratioBkg = this.bkgModels[this.controller.background].width / this.bkgModels[this.controller.background].height
+		let ratio = this.app.screen.width / this.app.screen.height
 
-		if (ratio > 1) {
+		if (ratioBkg > 1) {
 
-			if (this.app.screen.height > this.app.screen.width) {
-				this.bkg.height = this.app.screen.height
-				this.bkg.width = this.app.screen.height * ratio
+			if (ratio < ratioBkg) {
+				bkg.height = this.app.screen.height
+				bkg.width = this.app.screen.height * ratioBkg
 			} else {
-				this.bkg.width = this.app.screen.width
-				this.bkg.height = this.app.screen.width / ratio
+				bkg.width = this.app.screen.width
+				bkg.height = this.app.screen.width / ratioBkg
+			}
+		} else {
+			if (ratio < ratioBkg) {
+				bkg.height = this.app.screen.height
+				bkg.width = this.app.screen.height * ratioBkg
+			} else {
+				bkg.width = this.app.screen.width
+				bkg.height = this.app.screen.width / ratioBkg
 			}
 		}
+
+		this.bkg = new Container()
+
+		// github link
+		this.github = new Sprite(this.resources.github.texture)
+		this.github.anchor.set(0.5, 0.5)
+		this.github.x = this.app.screen.width / 2
+		this.github.y = this.app.screen.height / 2
+
+		this.github.interactive = true
+
+		this.github.click = () => {
+			window.open('https://github.com/Robpayot/Raindrops')
+		}
+
+		this.bkg.addChild(bkg)
+		this.bkg.addChild(this.github)
+
 
 		this.app.stage.addChild(this.bkg)
 
@@ -147,8 +196,7 @@ class Drops {
 
 		for (let i = 0; i < this.controller.nb_drops; i++) {
 
-			let model = Math.round(getRandom(0,3))
-			console.log(model)
+			let model = Math.round(getRandom(0, 3))
 
 			let drop = new Sprite(this.dropModels[model])
 			let dropNormal = new Sprite(this.dropNormalModels[model])
@@ -158,29 +206,16 @@ class Drops {
 			dropNormal.anchor.set(0.5, 0.5)
 
 			// Random positions
-			let marge = this.app.screen.width / 6
-			drop.initX = getRandom(this.app.screen.width / 2 - marge, this.app.screen.width / 2 + marge)
-			drop.initY = getRandom(this.app.screen.height / 2 - marge, this.app.screen.height / 2 + marge)
+			// let marge = this.app.screen.width / 3
+			drop.initX = getRandom(this.app.screen.width / 2 - this.app.screen.width * 0.3, this.app.screen.width / 2 + this.app.screen.width * 0.3)
+			drop.initY = getRandom(this.app.screen.height / 2 - this.app.screen.height * 0.3, this.app.screen.height / 2 + this.app.screen.height * 0.3)
 
 			// Random size
 			dropNormal.scale.x = drop.scale.x = dropNormal.scale.y = drop.scale.y = drop.initScale = getRandom(0.8, 1.2)
 
-			let margeCollision = 100
-			// Avoid collisions
-			for (let i = 0; i < this.drops.length; i++) {
-				if (drop.initX < margeCollision + this.drops[i].initX && drop.initX > -margeCollision + this.drops[i].initX && drop.initY < margeCollision + this.drops[i].initY && drop.initY > -margeCollision + this.drops[i].initY) {
-					// if in the perimeter
-					drop.initX += margeCollision
-					drop.initY += margeCollision
-
-				}
-			}
-
-			dropNormal.x = drop.x = drop.initX
-			dropNormal.y = drop.y = drop.initY
-
-			drop.coefX = 0.04 * drop.initScale // random velocity
-			drop.coefY = 0.04 * drop.initScale
+			// Speed
+			drop.coefX = 0.04 / (drop.initScale / 0.5)
+			drop.coefY = 0.04 / (drop.initScale / 0.5)
 
 			this.app.stage.addChild(drop)
 			this.normalsContainer.addChild(dropNormal)
@@ -192,6 +227,41 @@ class Drops {
 			this.posTargets.push({ x: drop.x, y: drop.y })
 			this.posSmooth.push({ x: drop.x, y: drop.y })
 
+			// Avoid collisions
+			let margeCollision = 100
+			let loop = true
+			while (loop === true) {
+
+				let collision = false
+				for (let y = 0; y < i; y++) {
+
+					// if (drop.initX < this.app.screen.width / 2 - marge || drop.initX > this.app.screen.width / 2 + marge || drop.initY < this.app.screen.height / 2 - marge || drop.initY > this.app.screen.height / 2 + marge) {
+					// 	drop.initX = getRandom(this.app.screen.width / 2 - marge, this.app.screen.width / 2 + marge)
+					// 	drop.initY = getRandom(this.app.screen.height / 2 - marge, this.app.screen.height / 2 + marge)
+					// 	continue
+					// }
+					if (drop.initX < margeCollision + this.drops[y].initX && drop.initX > -margeCollision + this.drops[y].initX && drop.initY < margeCollision + this.drops[y].initY && drop.initY > -margeCollision + this.drops[y].initY) {
+
+						collision = true
+					}
+				}
+				if (collision === true) {
+					// if in the perimeter
+					// randomize addition
+					let random = Math.round(getRandom(1,2))
+					if (random % 2 > 0) drop.initX -= margeCollision
+					else drop.initX += margeCollision
+
+					random = Math.round(getRandom(1,2))
+					if (random % 2 > 0) drop.initY -= margeCollision
+					else drop.initY += margeCollision
+
+				} else {
+					loop = false
+					dropNormal.x = drop.x = drop.initX
+					dropNormal.y = drop.y = drop.initY
+				}
+			}
 		}
 
 	}
@@ -285,8 +355,8 @@ class Drops {
 		if (e) {
 			let x = e.touches && e.touches[0].pageX ? e.touches[0].pageX : e.pageX || e.clientX
 			let y = e.touches && e.touches[0].pageY ? e.touches[0].pageY : e.pageY || e.clientY
-			this.mouse.x = x - this.screen.w / 2
-			this.mouse.y = y - this.screen.h / 2
+			this.mouse.x = x - window.innerWidth / 2
+			this.mouse.y = y - window.innerHeight / 2
 
 		}
 	}
@@ -297,6 +367,7 @@ class Drops {
 	}
 
 	handleRAF() {
+		// console.log('raf')
 
 		// Move drops
 		for (let i = 0; i < this.drops.length; i++) {
@@ -329,6 +400,22 @@ class Drops {
 
 		this.flicker.scale.x = this.controller.flicker_effect
 		this.flicker.scale.y = this.controller.flicker_effect
+	}
+
+	reset() {
+		this.app.ticker.stop()
+		this.app.view.removeEventListener('mousemove', this.handleMouse)
+		this.app.view.removeEventListener('mouseleave', this.stopMouse)
+		this.app.stage.destroy({ children: true, texture: false, baseTexture: true })
+		this.app.destroy(this.app.view)
+
+		let canvas = document.createElement('canvas')
+		document.body.appendChild(canvas)
+
+		this.init()
+		this.app.view.addEventListener('mousemove', this.handleMouse)
+		this.app.view.addEventListener('mouseleave', this.stopMouse)
+
 	}
 
 }
