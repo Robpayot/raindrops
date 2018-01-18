@@ -113,6 +113,8 @@ class Drops {
 		this.setRefraction()
 		this.setFlicker()
 
+		this.initiated = true
+
 	}
 
 	events() {
@@ -362,8 +364,10 @@ class Drops {
 	}
 
 	stopMouse() {
-		this.mouse.x = 0
-		this.mouse.y = 0
+		this.mouse = {
+			x: 0,
+			y: 0
+		}
 	}
 
 	handleRAF() {
