@@ -164,7 +164,7 @@ class Drops {
 		this.github.interactive = true
 
 		this.github.click = () => {
-			window.open('https://github.com/Robpayot/Raindrops')
+			window.open('https://github.com/Robpayot/raindrops')
 		}
 
 		this.bkg.addChild(bkg)
