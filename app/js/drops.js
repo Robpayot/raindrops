@@ -121,6 +121,7 @@ class Drops {
 	events() {
 
 		this.app.view.addEventListener('mousemove', this.handleMouse)
+		this.app.view.addEventListener('touchmove', this.handleMouse)
 		this.app.view.addEventListener('mouseleave', this.stopMouse)
 
 		this.app.ticker.start()
@@ -410,6 +411,7 @@ class Drops {
 		// remove events
 		this.app.ticker.stop()
 		this.app.view.removeEventListener('mousemove', this.handleMouse)
+		this.app.view.removeEventListener('touchmove', this.handleMouse)
 		this.app.view.removeEventListener('mouseleave', this.stopMouse)
 		this.app.stage.destroy({ children: true, texture: false, baseTexture: true })
 		this.app.destroy(this.app.view)
@@ -421,6 +423,7 @@ class Drops {
 		this.init()
 		// Re-add events
 		this.app.view.addEventListener('mousemove', this.handleMouse)
+		this.app.view.addEventListener('touchmove', this.handleMouse)
 		this.app.view.addEventListener('mouseleave', this.stopMouse)
 
 	}
