@@ -50,16 +50,16 @@ class Drops {
 			background: 'window',
 		}
 
+		// GUI controller
 		this.gui = new dat.GUI()
 		this.gui.add(this.controller, 'refraction', -2000, 1000).onChange(this.onChangeFilter)
 		this.gui.add(this.controller, 'flicker_effect', 0, 50).onChange(this.onChangeFilter)
 		this.gui.add(this.controller, 'wind', 0, 15).onChange(this.onChangeFilter)
 		this.gui.add(this.controller, 'nb_drops', 1, 100).onChange(this.reset)
 		this.gui.add(this.controller, 'background', ['window', 'abstrait', 'surfboard']).onChange(this.reset)
-		// this.gui.add(this.controller, 'nb_drops', 1, 40)
 
 
-		// Load
+		// Load all textures
 		this.loader = loader
 		this.loader.add('window', windowBkg)
 		this.loader.add('surfboard', surfboardBkg)
@@ -99,6 +99,7 @@ class Drops {
 
 	init() {
 
+		// Create Pixi Scene
 		this.app = new Application({
 			width: window.innerWidth,
 			height: window.innerHeight,
@@ -128,6 +129,7 @@ class Drops {
 
 	setBackground() {
 
+		// Set bkg size
 		let bkg = new Sprite(this.bkgModels[this.controller.background])
 		bkg.anchor.set(0.5, 0.5)
 		bkg.x = this.app.screen.width / 2
@@ -157,7 +159,7 @@ class Drops {
 
 		this.bkg = new Container()
 
-		// github link
+		// Add Github link in the background
 		this.github = new Sprite(this.resources.github.texture)
 		this.github.anchor.set(0.5, 0.5)
 		this.github.x = this.app.screen.width / 2
@@ -182,14 +184,14 @@ class Drops {
 		// Object containing all normals
 		this.normalsContainer = new Container()
 
-		// Important, add a 50% background gray to avoid image distorsion due to the Displacement filter.
+		// Important : Add a 50% background gray to avoid image distorsion due to the Displacement filter.
 		let grayBkg = new Graphics()
 		grayBkg.beginFill(0x808080)
 		grayBkg.drawRect(0, 0, this.app.screen.width, this.app.screen.height)
 
 		this.normalsContainer.addChild(grayBkg)
 
-		// 4 differents type of drops
+		// 4 differents types of drops
 		this.dropModels = [this.resources.drop1.texture, this.resources.drop2.texture, this.resources.drop3.texture, this.resources.drop4.texture]
 		this.dropNormalModels = [this.resources.dropNormal1.texture, this.resources.dropNormal2.texture, this.resources.dropNormal3.texture, this.resources.dropNormal4.texture]
 
@@ -227,7 +229,7 @@ class Drops {
 
 
 
-			// Avoid collisions
+			// Avoid drops collisions
 			let margeCollision = 100
 			let loop = true
 			while (loop === true) {
@@ -267,13 +269,12 @@ class Drops {
 
 	setRefraction() {
 
-		// Create a render texture containing all normal drops
-		// This render Texture will be use as a filter on the background
+		// Create a render texture containing all normal drops. This render Texture will be use as a filter on the background
 
 		this.renderTexture = RenderTexture.create(this.app.screen.width, this.app.screen.height)
 		let renderTextureSprite = new Sprite(this.renderTexture)
 
-		// Create Filter
+		// Create a Displacement Filter of the texture
 		this.displacement = new filters.DisplacementFilter(renderTextureSprite)
 		this.displacement.scale.x = this.controller.refraction
 		this.displacement.scale.y = this.controller.refraction
@@ -283,11 +284,12 @@ class Drops {
 
 	setFlicker() {
 
+		// Noise texture
 		this.flickerSprite = new Sprite(this.resources.flicker.texture)
 
 		this.flickerSprite.texture.baseTexture.wrapMode = WRAP_MODES.REPEAT
 
-
+		// Create a Displacement Filter of this noise texture
 		this.flicker = new filters.DisplacementFilter(this.flickerSprite)
 		this.flicker.scale.x = this.controller.flicker_effect
 		this.flicker.scale.y = this.controller.flicker_effect
@@ -305,6 +307,7 @@ class Drops {
 
 	stretch() {
 
+		// Stretch drops if fast mouse mouvements
 		// Calcule mouse speed
 		let distX = this.mouse.x - this.lastMouseX
 		let distY = this.mouse.y - this.lastMouseY
@@ -368,8 +371,8 @@ class Drops {
 	}
 
 	handleRAF() {
-		// console.log('raf')
 
+		// Pixi raf
 		// Move drops
 		for (let i = 0; i < this.drops.length; i++) {
 
@@ -404,6 +407,7 @@ class Drops {
 	}
 
 	reset() {
+		// remove events
 		this.app.ticker.stop()
 		this.app.view.removeEventListener('mousemove', this.handleMouse)
 		this.app.view.removeEventListener('mouseleave', this.stopMouse)
@@ -413,7 +417,9 @@ class Drops {
 		let canvas = document.createElement('canvas')
 		document.body.appendChild(canvas)
 
+		// Recreate Pixi Scene
 		this.init()
+		// Re-add events
 		this.app.view.addEventListener('mousemove', this.handleMouse)
 		this.app.view.addEventListener('mouseleave', this.stopMouse)
 
