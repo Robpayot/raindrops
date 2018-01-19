@@ -129,7 +129,7 @@ class Drops {
 
 	setBackground() {
 
-		// Set bkg size 
+		// Set bkg size
 		let bkg = new Sprite(this.bkgModels[this.controller.background])
 		bkg.anchor.set(0.5, 0.5)
 		bkg.x = this.app.screen.width / 2
