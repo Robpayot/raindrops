@@ -113,6 +113,8 @@ class Drops {
 		this.setRefraction()
 		this.setFlicker()
 
+		this.initiated = true
+
 	}
 
 	events() {
@@ -223,9 +225,7 @@ class Drops {
 			this.drops.push(drop)
 			this.dropsNormal.push(dropNormal)
 
-			// save drops coordinates
-			this.posTargets.push({ x: drop.x, y: drop.y })
-			this.posSmooth.push({ x: drop.x, y: drop.y })
+
 
 			// Avoid collisions
 			let margeCollision = 100
@@ -235,11 +235,6 @@ class Drops {
 				let collision = false
 				for (let y = 0; y < i; y++) {
 
-					// if (drop.initX < this.app.screen.width / 2 - marge || drop.initX > this.app.screen.width / 2 + marge || drop.initY < this.app.screen.height / 2 - marge || drop.initY > this.app.screen.height / 2 + marge) {
-					// 	drop.initX = getRandom(this.app.screen.width / 2 - marge, this.app.screen.width / 2 + marge)
-					// 	drop.initY = getRandom(this.app.screen.height / 2 - marge, this.app.screen.height / 2 + marge)
-					// 	continue
-					// }
 					if (drop.initX < margeCollision + this.drops[y].initX && drop.initX > -margeCollision + this.drops[y].initX && drop.initY < margeCollision + this.drops[y].initY && drop.initY > -margeCollision + this.drops[y].initY) {
 
 						collision = true
@@ -262,6 +257,10 @@ class Drops {
 					dropNormal.y = drop.y = drop.initY
 				}
 			}
+
+			// save drops coordinates
+			this.posTargets.push({ x: drop.x, y: drop.y })
+			this.posSmooth.push({ x: drop.x, y: drop.y })
 		}
 
 	}
@@ -362,8 +361,10 @@ class Drops {
 	}
 
 	stopMouse() {
-		this.mouse.x = 0
-		this.mouse.y = 0
+		this.mouse = {
+			x: 0,
+			y: 0
+		}
 	}
 
 	handleRAF() {
