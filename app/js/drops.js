@@ -43,7 +43,7 @@ class Drops {
 
 		// GUI
 		this.controller = {
-			nb_drops: 20,
+			nb_drops: window.innerWidth > 768 ? 20 : 8,
 			refraction: 120,
 			flicker_effect: 30,
 			wind: 0.1,
@@ -99,12 +99,14 @@ class Drops {
 
 	init() {
 
+		let reso = window.innerWidth > 768 ? window.devicePixelRatio : 1
+
 		// Create Pixi Scene
 		this.app = new Application({
 			width: window.innerWidth,
 			height: window.innerHeight,
 			view: document.querySelector('canvas'),
-			resolution: window.devicePixelRatio,
+			resolution: reso,
 			sharedTicker: true,
 			backgroundColor: 0xf4efe2
 		})
