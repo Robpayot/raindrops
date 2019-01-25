@@ -279,6 +279,7 @@ class Drops {
 
 		// Create a Displacement Filter of the texture
 		this.displacement = new filters.DisplacementFilter(renderTextureSprite)
+		this.displacement.padding = 0
 		this.displacement.scale.x = this.controller.refraction
 		this.displacement.scale.y = this.controller.refraction
 		this.bkg.filters = [this.displacement]
@@ -296,6 +297,8 @@ class Drops {
 		this.flicker = new filters.DisplacementFilter(this.flickerSprite)
 		this.flicker.scale.x = this.controller.flicker_effect
 		this.flicker.scale.y = this.controller.flicker_effect
+
+		this.flicker.padding = 0
 
 		// Need to be added to stage
 		this.app.stage.addChild(this.flickerSprite)
